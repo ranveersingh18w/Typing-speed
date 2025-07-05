@@ -6,23 +6,21 @@
     <title>Typing Speed Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Make sure lines.js is in the same folder or provide the correct path -->
-    <script src="lines.js" defer></script>
     <style>
-        /* --- New Synthwave Theme --- */
+        /* --- New "Cyber Grid" Theme --- */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a2e;
+            background-color: #0d0c22;
             background-image: 
-                linear-gradient(rgba(26, 26, 46, 0.95), rgba(26, 26, 46, 0.95)),
-                radial-gradient(ellipse at top, #e94560, transparent),
-                radial-gradient(ellipse at bottom, #0f3460, transparent);
-            background-size: cover;
+                linear-gradient(rgba(13, 12, 34, 0.95), rgba(13, 12, 34, 0.95)),
+                linear-gradient(0deg, rgba(0, 245, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 212, 0.05) 1px, transparent 1px);
+            background-size: 100%, 30px 30px, 30px 30px;
             overflow-x: hidden;
         }
         .hidden { display: none; }
-        .correct { color: #39ff14; } /* Neon Green */
-        .incorrect { color: #ff2a6d; } /* Neon Pink */
+        .correct { color: #00ffc3; } /* Bright Cyan/Green */
+        .incorrect { color: #ff33a8; } /* Hot Pink */
         
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .current { position: relative; }
@@ -39,7 +37,7 @@
         }
         #text-to-type {
             font-size: 1.5rem; line-height: 2.5rem; letter-spacing: 0.025em;
-            color: #9faded; /* Light Cyan */
+            color: #a7aed0; /* Light lavender */
             transition: transform 0.3s ease-out;
             position: relative;
             white-space: pre-wrap; 
@@ -51,17 +49,17 @@
         #user-input::-moz-selection { background: transparent; }
 
         .glass-container {
-            background: rgba(23, 23, 39, 0.6); backdrop-filter: blur(10px);
-            border: 1px solid #e94560;
-            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+            background: rgba(13, 12, 34, 0.7); backdrop-filter: blur(10px);
+            border: 1px solid #ff33a8;
+            box-shadow: 0 0 20px rgba(255, 51, 168, 0.3);
         }
         .primary-btn {
-            background: linear-gradient(45deg, #ff2a6d, #e94560);
-            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5); transition: all 0.3s ease;
+            background: linear-gradient(45deg, #ff33a8, #e94560);
+            box-shadow: 0 0 15px rgba(255, 51, 168, 0.5); transition: all 0.3s ease;
         }
         .primary-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 0 25px rgba(233, 69, 96, 0.8);
+            box-shadow: 0 0 25px rgba(255, 51, 168, 0.8);
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -80,7 +78,7 @@
         #keyboard { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
         .keyboard-row { display: flex; justify-content: center; gap: 0.5rem; }
         .key {
-            position: relative; color: #1a1a2e; border-radius: 0.375rem; font-weight: 600;
+            position: relative; color: #0d0c22; border-radius: 0.375rem; font-weight: 600;
             width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
             text-transform: uppercase; border-bottom: 3px solid rgba(0,0,0,0.2);
             transition: all 0.1s ease;
@@ -106,7 +104,7 @@
     <div class="w-full max-w-5xl mx-auto p-4 md:p-6 text-center">
         <!-- Setup Screen -->
         <div id="setup-screen" class="fade-in">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Synthwave Typer</h1>
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Typing Speed Test</h1>
             <p class="text-lg text-gray-400 mb-8">Select a test duration to begin.</p>
             <div class="flex flex-wrap justify-center gap-4">
                 <button data-time="20" class="time-btn primary-btn text-white font-bold py-3 px-6 rounded-lg text-lg">20s</button>
@@ -119,20 +117,49 @@
         <!-- Test Screen -->
         <div id="test-screen" class="hidden">
             <header class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-white">Synthwave Typer</h1>
+                <h1 class="text-2xl font-bold text-white">Typing Speed Test</h1>
                 <div id="timer-container"><span id="timer">0s</span></div>
             </header>
             <div id="text-container" class="glass-container p-6 rounded-lg mb-6">
                 <div id="text-to-type" class="select-none"></div>
                 <textarea id="user-input" class="absolute top-0 left-0 w-full h-full p-6 bg-transparent resize-none outline-none" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
             </div>
-            <button id="end-test-btn" class="secondary-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-lg transition-all mb-4">End Test</button>
+            <div class="flex justify-center gap-4 mb-4">
+                <button id="back-btn" class="secondary-btn bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition-all">Back</button>
+                <button id="end-test-btn" class="secondary-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-lg transition-all">End Test</button>
+            </div>
             <div id="keyboard-container"><div id="keyboard"></div></div>
         </div>
 
         <!-- Result Screen -->
         <div id="result-screen" class="hidden"></div>
     </div>
+    
+    <script>
+        // This file contains the text passages for the typing test.
+        const textSource = [
+            "The quick brown fox jumps over the lazy dog. This classic sentence is used to test typewriters and computer keyboards because it contains all the letters of the English alphabet.",
+            "Technology has revolutionized the way we live and work. From smartphones to artificial intelligence, innovation continues to shape our future and present new challenges and opportunities.",
+            "The sun dipped below the horizon, painting the sky in hues of orange and purple. A gentle breeze rustled the leaves of the trees, creating a soothing melody for the evening.",
+            "To be successful, you must be willing to put in the hard work and dedication. There are no shortcuts to achieving your goals. Stay focused, remain persistent, and never lose sight.",
+            "Reading is a fundamental skill that opens up a world of knowledge and imagination. Whether you enjoy fiction, non-fiction, or poetry, books have the power to transport you to new places.",
+            "The world of finance is complex and ever-changing. Markets fluctuate based on a variety of factors, from economic reports to global events. Investors must be vigilant and informed.",
+            "The importance of a healthy lifestyle cannot be overstated. A balanced diet, regular exercise, and adequate sleep are the pillars of well-being, contributing to both physical and mental health.",
+            "The journey of a thousand miles begins with a single step. This ancient proverb reminds us that every great achievement starts with a small, manageable action. Do not be intimidated.",
+            "Creativity is the engine of progress. It allows us to solve problems in new ways and to create things that have never existed before. Nurture your creative spirit, for it is a precious resource.",
+            "In the heart of the city, life moves at a relentless pace. Sirens wail in the distance, crowds bustle along the sidewalks, and skyscrapers reach for the clouds, creating a vibrant tapestry of human activity.",
+            "History is not just a study of the past, but a guide for the future. By understanding the mistakes and triumphs of those who came before us, we can make better decisions for ourselves and for society.",
+            "The vastness of space has always captivated the human imagination. From the twinkling stars to the swirling galaxies, the cosmos invites us to explore and to wonder about our place in the universe.",
+            "Music has a unique power to evoke emotions and to connect people across cultures. A simple melody can bring joy, comfort, or a sense of shared experience, transcending language barriers.",
+            "The principles of science provide a framework for understanding the natural world. Through observation, experimentation, and critical thinking, we can uncover the laws that govern the universe.",
+            "Learning a new language opens up a new world of communication and understanding. It allows you to connect with different people, experience new cultures, and see the world from a new perspective.",
+            "The art of cooking is a blend of creativity and precision. It involves combining flavors, textures, and aromas to create dishes that are both delicious and nourishing. A shared meal can be a powerful bond.",
+            "Climate change is one of the most pressing issues of our time. It requires a global effort to reduce emissions, transition to renewable energy, and protect our planet for future generations.",
+            "The internet has transformed the way we access information and connect with one another. It has created a global village where ideas can be shared instantly, but it also presents new challenges.",
+            "The beauty of nature can be found in the smallest details, from the intricate patterns of a snowflake to the vibrant colors of a butterfly's wings. Taking time to appreciate these wonders can be a source of peace.",
+            "A good story can transport you to another world. It can make you laugh, cry, and think about the world in new ways. The power of storytelling is a fundamental part of the human experience."
+        ];
+    </script>
     
     <script>
         // --- DOM Elements ---
@@ -204,7 +231,7 @@
             
             let longPassage = '';
             for (let i=0; i < 20; i++) { 
-                longPassage += textSource.join(' ') + ' ';
+                longPassage += textSource.sort(() => 0.5 - Math.random()).join(' ') + ' ';
             }
             let passage = longPassage.toLowerCase();
 
@@ -239,29 +266,22 @@
         function updateHighlighting() {
             const typedText = userInputElement.value;
             const currentPosition = typedText.length;
+            const lastPosition = currentPosition - 1;
 
-            // This logic is much faster as it only updates the changed character
-            const lastTypedCharIndex = currentPosition - 1;
-            if (lastTypedCharIndex >= 0) {
-                const span = characterSpans[lastTypedCharIndex];
-                if (span.textContent === typedText[lastTypedCharIndex]) {
+            if (lastPosition >= 0 && characterSpans[lastPosition]) {
+                const span = characterSpans[lastPosition];
+                span.classList.remove('current');
+                if (span.textContent === typedText[lastPosition]) {
                     span.className = 'correct';
                 } else {
                     span.className = 'incorrect';
                 }
             }
-
-            // Remove cursor from previous character if it exists
-            if (characterSpans[lastTypedCharIndex]) {
-                 characterSpans[lastTypedCharIndex].classList.remove('current');
-            }
             
-            // Add cursor to current character
             const currentSpan = characterSpans[currentPosition];
             if (currentSpan) {
                 currentSpan.className = 'current';
                 
-                // Handle scrolling
                 const lineHeight = parseFloat(getComputedStyle(textToTypeElement).lineHeight);
                 const spanLineIndex = Math.floor(currentSpan.offsetTop / lineHeight);
 
@@ -274,7 +294,6 @@
                 }
             }
 
-            // Update keyboard highlight
             if (lastHighlightedKey) lastHighlightedKey.classList.remove('highlight');
             const nextChar = currentSpan?.textContent.toLowerCase() || '';
             const keyElement = document.querySelector(`.key[data-key="${nextChar}"]`);
@@ -323,7 +342,7 @@
                 <div class="glass-container p-8 rounded-lg max-w-lg mx-auto fade-in">
                     <h2 class="text-3xl font-bold mb-4 text-white">Test Complete!</h2>
                     <div class="grid grid-cols-2 gap-4 text-left mb-8">
-                        <div><p class="text-gray-400">Speed (WPM)</p><p class="text-4xl font-bold text-indigo-400">${wpm}</p></div>
+                        <div><p class="text-gray-400">Speed (WPM)</p><p class="text-4xl font-bold text-cyan-400">${wpm}</p></div>
                         <div><p class="text-gray-400">Accuracy</p><p class="text-4xl font-bold">${accuracy}%</p></div>
                         <div><p class="text-gray-400">Typed Chars</p><p class="text-4xl font-bold">${typedChars}</p></div>
                         <div><p class="text-gray-400">Incorrect Words</p><p class="text-4xl font-bold text-red-400">${incorrectWordsCount}</p></div>
@@ -376,10 +395,12 @@
         window.addEventListener('load', () => {
             const timeButtons = document.querySelectorAll('.time-btn');
             const endTestBtn = document.getElementById('end-test-btn');
+            const backBtn = document.getElementById('back-btn');
             
             timeButtons.forEach(button => button.addEventListener('click', () => initializeTest(parseInt(button.dataset.time))));
             userInputElement.addEventListener('input', handleInput);
             endTestBtn.addEventListener('click', endTest);
+            backBtn.addEventListener('click', resetToSetup);
             
             document.addEventListener('keydown', handleKeyPress);
             document.addEventListener('keyup', handleKeyPress);
