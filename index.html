@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthwave Typing Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Enhanced Synthwave Theme --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            overflow: hidden; /* Hide scrollbars from canvas */
+            position: relative;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Place canvas behind all content */
+        }
+        .hidden { display: none; }
+        .correct { color: #39ff14; } /* Neon Green */
+        .incorrect { 
+            color: #ff2a6d; /* Neon Pink */
+            text-decoration: underline;
+            background-color: rgba(255, 42, 109, 0.2);
+            border-radius: 2px;
+        }
+        
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .current { position: relative; }
+        .current::before {
+            content: ''; position: absolute; left: -1px; top: 10%;
+            height: 80%; width: 2px; background-color: #00f5d4; /* Neon Cyan */
+            animation: blink 1s infinite; border-radius: 2px;
+        }
+        
+        #text-container {
+            height: 7.5rem; overflow: hidden; position: relative;
+            -webkit-mask-image: linear-gradient(to bottom, black 66%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 66%, transparent 100%);
+            transition: transform 0.2s ease-out;
+        }
+        #text-to-type {
+            font-size: 1.5rem; line-height: 2.5rem; letter-spacing: 0.025em;
+            color: #9faded; /* Light Cyan */
+            transition: transform 0.3s ease-out;
+            position: relative;
+            white-space: pre-wrap; 
+            word-break: keep-all;
+        }
+
+        #user-input { caret-color: transparent; color: transparent; }
+        #user-input::selection { background: transparent; }
+        #user-input::-moz-selection { background: transparent; }
+
+        .glass-container {
+            background: rgba(23, 23, 39, 0.7); backdrop-filter: blur(10px);
+            border: 1px solid #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+            transition: all 0.3s ease;
+        }
+        .primary-btn {
+            background: linear-gradient(45deg, #ff2a6d, #e94560);
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5); transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 0 25px rgba(233, 69, 96, 0.8);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 10px #00f5d4; } 50% { box-shadow: 0 0 20px #00f5d4; } }
+        #timer-container {
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.25rem; color: white;
+            background: rgba(15, 52, 96, 0.7); animation: pulse 2s infinite;
+            border: 1px solid #00f5d4;
+        }
+
+        #keyboard-container { margin-top: 2rem; }
+        #keyboard { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+        .keyboard-row { display: flex; justify-content: center; gap: 0.5rem; }
+        .key {
+            position: relative; color: #1a1a2e; border-radius: 0.375rem; font-weight: 600;
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            text-transform: uppercase; border-bottom: 3px solid rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+        }
+        .key.key-space { width: 400px; }
+
+        .key-color-cyan { background-color: #00f5d4; } .key-color-purple { background-color: #9d63e0; }
+        .key-color-pink { background-color: #ff2a6d; } .key-color-orange { background-color: #ff7f11; }
+        .key-color-yellow { background-color: #f7b801; } .key-color-green { background-color: #39ff14; }
+        .key-color-peach { background-color: #ff66c4; } .key-color-space { background-color: #e94560; }
+        
+        .key.highlight::before {
+            content: ''; position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%); width: 120%; height: 120%;
+            background: white; border-radius: 0.5rem; filter: blur(15px);
+            opacity: 0.8; z-index: -1; transition: opacity 0.2s;
+        }
+        .key.pressed { transform: translateY(2px) scale(0.98); border-bottom-width: 1px; }
+
+        /* @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; } */
+    </style>
+</head>
+<body class="text-gray-200 flex items-center justify-center min-h-screen">
+    
+    <canvas id="background-canvas"></canvas>
+
+    <div class="w-full max-w-5xl mx-auto p-4 md:p-6 text-center z-10">
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Synthwave Typer</h1>
+            <p class="text-lg text-gray-400 mb-8">Select a test duration to begin.</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <button data-time="30" class="time-btn primary-btn text-white font-bold py-3 px-6 rounded-lg text-lg">30s</button>
+                <button data-time="60" class="time-btn primary-btn text-white font-bold py-3 px-6 rounded-lg text-lg">1m</button>
+                <button data-time="120" class="time-btn primary-btn text-white font-bold py-3 px-6 rounded-lg text-lg">2m</button>
+                <button data-time="300" class="time-btn primary-btn text-white font-bold py-3 px-6 rounded-lg text-lg">5m</button>
+            </div>
+        </div>
+
+        <!-- Test Screen -->
+        <div id="test-screen" class="hidden">
+            <header class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-white">Synthwave Typer</h1>
+                <div id="timer-container"><span id="timer">0s</span></div>
+            </header>
+            <div id="text-container" class="glass-container p-6 rounded-lg mb-6">
+                <div id="text-to-type" class="select-none"></div>
+                <textarea id="user-input" class="absolute top-0 left-0 w-full h-full p-6 bg-transparent resize-none outline-none" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+            </div>
+            <button id="end-test-btn" class="secondary-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-lg transition-all mb-4">End Test</button>
+            <div id="keyboard-container"><div id="keyboard"></div></div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden"></div>
+    </div>
+    
+    <script>
+        // --- Starfield Background ---
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let canvasWidth, canvasHeight;
+
+        function resizeCanvas() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvasWidth,
+                    y: Math.random() * canvasHeight,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.5 + 0.1
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillStyle = '#e94560'; // Neon Pink for stars
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                star.x -= star.speed;
+                if (star.x < 0) {
+                    star.x = canvasWidth;
+                }
+            }
+            requestAnimationFrame(drawStars);
+        }
+
+        // --- DOM Elements ---
+        const setupScreen = document.getElementById('setup-screen');
+        const testScreen = document.getElementById('test-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const textContainer = document.getElementById('text-container');
+        const textToTypeElement = document.getElementById('text-to-type');
+        const userInputElement = document.getElementById('user-input');
+        const timerElement = document.getElementById('timer');
+        
+        // --- Keyboard Data ---
+        const keyboardLayout = [
+            ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+            ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+            ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+            [' ']
+        ];
+        const keyColorMapping = {
+            'q': 'cyan', 'w': 'purple', 'e': 'pink', 'r': 'orange', 't': 'orange', 'y': 'yellow', 'u': 'yellow', 'i': 'green', 'o': 'peach', 'p': 'peach',
+            'a': 'cyan', 's': 'purple', 'd': 'pink', 'f': 'orange', 'g': 'orange', 'h': 'yellow', 'j': 'yellow', 'k': 'green', 'l': 'peach',
+            'z': 'cyan', 'x': 'purple', 'c': 'pink', 'v': 'orange', 'b': 'orange', 'n': 'yellow', 'm': 'yellow',
+            ' ': 'space'
+        };
+        
+        // --- Text Source ---
+        const textSource = [
+            "The neon glow of the city reflected in the rain-slicked streets.",
+            "Cybernetic enhancements are common in the sprawling metropolis of 2077.",
+            "A rogue AI has escaped its digital confines, causing chaos in the network.",
+            "Flying cars weave between towering skyscrapers that pierce the perpetual twilight.",
+            "Data heists in virtual reality are the new frontier for digital outlaws.",
+            "Remember to stay hydrated, it's important for your health and focus.",
+            "The hum of the servers is a constant lullaby in the hacker's den."
+        ];
+
+        // --- State Variables ---
+        let testDuration = 0, timerInterval, testActive = false, timeRemaining = 0;
+        let lastHighlightedKey = null;
+        let wpm = 0, accuracy = 100, errors = 0, typedChars = 0;
+        let currentLine = 0;
+        let characterSpans = []; 
+        let isUpdatePending = false;
+
+        // --- Core Functions ---
+        function createKeyboard() {
+            const keyboardDiv = document.getElementById('keyboard');
+            keyboardDiv.innerHTML = '';
+            keyboardLayout.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'keyboard-row';
+                row.forEach(key => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.textContent = key;
+                    keyDiv.className = 'key';
+                    keyDiv.dataset.key = key.toLowerCase();
+                    const color = keyColorMapping[key] || '';
+                    if (color) keyDiv.classList.add(`key-color-${color}`);
+                    if (key === ' ') {
+                        keyDiv.classList.add('key-space');
+                        keyDiv.textContent = 'Space';
+                    }
+                    rowDiv.appendChild(keyDiv);
+                });
+                keyboardDiv.appendChild(rowDiv);
+            });
+        }
+        
+        function initializeTest(duration) {
+            testDuration = duration;
+            timeRemaining = duration;
+            testActive = false;
+            clearInterval(timerInterval);
+            userInputElement.value = '';
+            userInputElement.disabled = false;
+            currentLine = 0;
+            textToTypeElement.style.transform = `translateY(0px)`;
+
+            timerElement.textContent = `${timeRemaining}s`;
+            wpm = 0; accuracy = 100; errors = 0; typedChars = 0;
+            
+            let longPassage = '';
+            for (let i=0; i < 20; i++) { 
+                longPassage += textSource.sort(() => 0.5 - Math.random()).join(' ') + ' ';
+            }
+            let passage = longPassage.toLowerCase();
+
+            textToTypeElement.innerHTML = ''; 
+            passage.split('').forEach(char => {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = char;
+                textToTypeElement.appendChild(charSpan);
+            });
+            characterSpans = Array.from(textToTypeElement.querySelectorAll('span')); 
+            
+            setupScreen.classList.add('hidden');
+            resultScreen.innerHTML = '';
+            resultScreen.classList.add('hidden');
+            testScreen.classList.remove('hidden');
+            testScreen.classList.add('fade-in');
+
+            updateHighlighting(true); 
+            userInputElement.focus();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                timerElement.textContent = `${timeRemaining}s`;
+                if (timeRemaining <= 0) {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function updateHighlighting(isReset = false) {
+            const typedText = userInputElement.value;
+            const currentPosition = typedText.length;
+            let hasError = false;
+
+            characterSpans.forEach((span, index) => {
+                if (index < currentPosition) {
+                    if (span.textContent === typedText[index]) {
+                        span.className = 'correct';
+                    } else {
+                        span.className = 'incorrect';
+                        hasError = true;
+                    }
+                } else {
+                    span.className = '';
+                }
+            });
+
+            // // Add shake animation on new error - REMOVED
+            // if (hasError && !textContainer.classList.contains('shake')) {
+            //     const lastTypedCharIndex = currentPosition - 1;
+            //     if (typedText[lastTypedCharIndex] !== characterSpans[lastTypedCharIndex]?.textContent) {
+            //         textContainer.classList.add('shake');
+            //         setTimeout(() => textContainer.classList.remove('shake'), 400);
+            //     }
+            // }
+
+            // Reset or move cursor
+            const prevCursor = textToTypeElement.querySelector('.current');
+            if (prevCursor) prevCursor.classList.remove('current');
+            
+            const currentSpan = characterSpans[currentPosition];
+            if (currentSpan) {
+                currentSpan.classList.add('current');
+                
+                // Handle scrolling
+                const lineHeight = parseFloat(getComputedStyle(textToTypeElement).lineHeight);
+                const spanLineIndex = Math.floor(currentSpan.offsetTop / lineHeight);
+
+                if (spanLineIndex > currentLine && spanLineIndex > 0) {
+                    currentLine = spanLineIndex;
+                    const offset = -(currentLine - 1) * lineHeight;
+                    textToTypeElement.style.transform = `translateY(${offset}px)`;
+                }
+            }
+
+            // Update keyboard highlight
+            if (lastHighlightedKey) lastHighlightedKey.classList.remove('highlight');
+            const nextChar = currentSpan?.textContent.toLowerCase() || '';
+            const keyElement = document.querySelector(`.key[data-key="${nextChar}"]`);
+            if (keyElement) {
+                keyElement.classList.add('highlight');
+                lastHighlightedKey = keyElement;
+            }
+        }
+
+        function calculateStats() {
+            const typedText = userInputElement.value;
+            typedChars = typedText.length;
+            
+            errors = typedText.split('').reduce((acc, char, index) => {
+                return characterSpans[index] && char !== characterSpans[index].textContent ? acc + 1 : acc;
+            }, 0);
+
+            accuracy = typedChars > 0 ? Math.round(((typedChars - errors) / typedChars) * 100) : 100;
+            const elapsedTimeInMinutes = (testDuration - timeRemaining) / 60;
+            wpm = elapsedTimeInMinutes > 0 ? Math.round(((typedChars / 5) - errors) / elapsedTimeInMinutes) : 0;
+            if (wpm < 0) wpm = 0;
+        }
+
+        function endTest() {
+            if (!testActive && userInputElement.value.length === 0) return;
+            
+            clearInterval(timerInterval);
+            testActive = false;
+            userInputElement.disabled = true;
+            calculateStats();
+            
+            resultScreen.innerHTML = `
+                <div class="glass-container p-8 rounded-lg max-w-lg mx-auto fade-in">
+                    <h2 class="text-3xl font-bold mb-4 text-white">Test Complete!</h2>
+                    <div class="grid grid-cols-2 gap-4 text-left mb-8">
+                        <div><p class="text-gray-400">Speed (WPM)</p><p class="text-4xl font-bold text-cyan-400">${wpm}</p></div>
+                        <div><p class="text-gray-400">Accuracy</p><p class="text-4xl font-bold text-green-400">${accuracy}%</p></div>
+                        <div><p class="text-gray-400">Typed Chars</p><p class="text-4xl font-bold text-purple-400">${typedChars}</p></div>
+                        <div><p class="text-gray-400">Errors</p><p class="text-4xl font-bold text-pink-500">${errors}</p></div>
+                    </div>
+                    <button id="new-test-btn" class="primary-btn text-white font-bold py-3 px-6 rounded-lg w-full text-lg">Start New Test</button>
+                </div>`;
+            
+            document.getElementById('new-test-btn').addEventListener('click', resetToSetup);
+            testScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+        }
+
+        function resetToSetup() {
+            resultScreen.classList.add('hidden');
+            testScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            setupScreen.classList.add('fade-in');
+            clearInterval(timerInterval);
+        }
+
+        function handleInput() {
+            if (!isUpdatePending) {
+                isUpdatePending = true;
+                requestAnimationFrame(() => {
+                    if (!testActive && userInputElement.value.length > 0) {
+                        testActive = true;
+                        startTimer();
+                    }
+                    if (testActive) {
+                        updateHighlighting();
+                        calculateStats();
+                    }
+                    isUpdatePending = false;
+                });
+            }
+        }
+
+        function handleKeyPress(e) {
+            let key = e.key.toLowerCase();
+            if (key === ' ') key = ' '; // Ensure space is handled correctly
+            const keyElement = document.querySelector(`.key[data-key="${key}"]`);
+            if (keyElement) {
+                if (e.type === 'keydown') {
+                    keyElement.classList.add('pressed');
+                } else {
+                    keyElement.classList.remove('pressed');
+                }
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            const timeButtons = document.querySelectorAll('.time-btn');
+            const endTestBtn = document.getElementById('end-test-btn');
+            
+            timeButtons.forEach(button => button.addEventListener('click', () => initializeTest(parseInt(button.dataset.time))));
+            userInputElement.addEventListener('input', handleInput);
+            endTestBtn.addEventListener('click', endTest);
+            
+            document.addEventListener('keydown', handleKeyPress);
+            document.addEventListener('keyup', handleKeyPress);
+
+            createKeyboard();
+
+            // Initialize and start background animation
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            drawStars();
+        });
+    </script>
+</body>
+</html>
